@@ -1,58 +1,25 @@
 package pepepow
 
 import (
-	"encoding/json"
+    "time"
 
-	"github.com/golang/glog"
-	"github.com/trezor/blockbook/bchain"
-	"github.com/trezor/blockbook/bchain/coins/btc"
+    "github.com/trezor/blockbook/bchain"
+    hclient "github.com/trezor/blockbook/bchain/client/http"
 )
 
-// PepepowRPC is an interface to JSON-RPC bitcoind service.
-type PepepowRPC struct {
-	*btc.BitcoinRPC
+// init registers the PepePow RPC client constructor using the generic HTTP JSON-RPC client.
+func init() {
+    bchain.RegisterRPC("pepepow", parsePepePowRPC)
 }
 
-// NewPepepowRPC returns new PepepowRPC instance.
-func NewPepepowRPC(config json.RawMessage, pushHandler func(bchain.NotificationType)) (bchain.BlockChain, error) {
-	b, err := btc.NewBitcoinRPC(config, pushHandler)
-	if err != nil {
-		return nil, err
-	}
-
-	s := &PepepowRPC{
-		b.(*btc.BitcoinRPC),
-	}
-	s.RPCMarshaler = btc.JSONMarshalerV2{}
-	s.ChainConfig.SupportsEstimateFee = false
-
-	return s, nil
-}
-
-// Initialize initializes PepepowRPC instance.
-func (b *PepepowRPC) Initialize() error {
-	ci, err := b.GetChainInfo()
-	if err != nil {
-		return err
-	}
-	chainName := ci.Chain
-
-	glog.Info("Chain name ", chainName)
-	params := GetChainParams(chainName)
-
-	// always create parser
-	b.Parser = NewPepepowParser(params, b.ChainConfig)
-
-	// parameters for getInfo request
-	if params.Net == MainnetMagic {
-		b.Testnet = false
-		b.Network = "livenet"
-	} else {
-		b.Testnet = true
-		b.Network = "testnet"
-	}
-
-	glog.Info("rpc: block chain ", params.Name)
-
-	return nil
+// parsePepePowRPC constructs an HTTP RPC client for PepePow based on RawChaincfg.
+func parsePepePowRPC(raw *bchain.RawChaincfg) (*bchain.RPCClient, error) {
+    // Use timeout from config (in seconds)
+    timeout := time.Duration(raw.RPCTimeout) * time.Second
+    // Create a new HTTP JSON-RPC client
+    client, err := hclient.New(raw.RPCURL, raw.RPCUser, raw.RPCPass, timeout, raw.NamedParams)
+    if err != nil {
+        return nil, err
+    }
+    return client, nil
 }
