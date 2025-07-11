@@ -22,13 +22,13 @@
     "package_name": "backend-pepepow",
     "package_revision": "satoshilabs-1",
     "system_user": "pepepow",
-    "version": "1.0.0",
-    "binary_url": "https://example.com/pepepow-1.0.0.tar.gz",
+    "version": "2.8.1.1",
+    "binary_url": "https://github.com/MattF42/PePe-core/releases/download/v2.8.1.1/PEPEPOW-v2.8.1.1-40b8862-release-aarch64-linux-gnu.tgz",
     "verification_type": "sha256",
-    "verification_source": "",
+    "verification_source": "sha256:b9e975faef36f1ce07b19ab3beb8eace499d1d54f258a98face91812c4700449",
     "extract_command": "tar -C backend --strip 1 -xf",
     "exclude_files": [
-      "pepepow-qt"
+      "PEPEPOW-cli"
     ],
     "exec_command_template": "{{.Env.BackendInstallPath}}/{{.Coin.Alias}}/pepepowd -datadir={{.Env.BackendDataPath}}/{{.Coin.Alias}}/backend -conf={{.Env.BackendInstallPath}}/{{.Coin.Alias}}/{{.Coin.Alias}}.conf -pid=/run/{{.Coin.Alias}}/{{.Coin.Alias}}.pid",
     "logrotate_files_template": "{{.Env.BackendDataPath}}/{{.Coin.Alias}}/backend/*.log",
