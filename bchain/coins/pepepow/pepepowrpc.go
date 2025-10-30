@@ -5,6 +5,7 @@ import (
 
 	"github.com/trezor/blockbook/bchain"
 	"github.com/trezor/blockbook/bchain/coins/btc"
+	"github.com/trezor/blockbook/bchain/coins/dash"
 )
 
 // --------------------------------------------------------------------------------
@@ -31,14 +32,10 @@ func (r *PepepowRPC) Initialize() error {
 	if err != nil {
 		return err
 	}
-	params := GetChainParams(ci.Chain)
+	params := dash.GetChainParams(ci.Chain)
 
-	parser, err := NewPepepowParser(params, r.ChainConfig)
-	if err != nil {
-		return err
-	}
-	r.Parser = parser
-	if params.Net == MainnetMagic {
+	r.Parser = NewPepepowParser(params, r.ChainConfig)
+	if params.Net == dash.MainnetMagic {
 		r.Testnet = false
 		r.Network = "livenet"
 	} else {
