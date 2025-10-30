@@ -1,27 +1,61 @@
 package pepepow
 
 import (
-    "github.com/trezor/blockbook/bchain"
-    "github.com/trezor/blockbook/bchain/coins/dash"
+	"github.com/martinboehm/btcutil/chaincfg"
+	"github.com/trezor/blockbook/bchain"
+	"github.com/trezor/blockbook/bchain/coins/btc"
+	"github.com/trezor/blockbook/bchain/coins/dash"
 )
 
-// init registers the PepePow parser using the Dash parser as base.
-func init() {
-    bchain.RegisterParser("pepepow", parsePepePowParams)
+const (
+	// xpub defaults copied from Bitcoin as PepePow reuses the same serialization.
+	xpubMagic             uint32 = 0x0488b21e
+	xpubMagicSegwitP2sh   uint32 = 0x049d7cb2
+	xpubMagicSegwitNative uint32 = 0x04b24746
+)
+
+// PepepowParser implements the bitcoin-like parser logic for PepePow.
+type PepepowParser struct {
+	*btc.BitcoinLikeParser
+	baseparser *bchain.BaseParser
 }
 
-// parsePepePowParams delegates to Dash parser because PepePow is a fork of Dash core v0.12.2.
-// It then overrides any chain-specific parameters from the raw configuration.
-func parsePepePowParams(raw *bchain.RawChaincfg) (*bchain.Chaincfg, error) {
-    // Use the Dash parser for most settings
-    cfg, err := dash.Parse(raw)
-    if err != nil {
-        return nil, err
-    }
+func applyPepepowConfig(c *btc.Configuration) *btc.Configuration {
+	if c == nil {
+		c = &btc.Configuration{}
+	}
+	if c.XPubMagic == 0 {
+		c.XPubMagic = xpubMagic
+	}
+	if c.XPubMagicSegwitP2sh == 0 {
+		c.XPubMagicSegwitP2sh = xpubMagicSegwitP2sh
+	}
+	if c.XPubMagicSegwitNative == 0 {
+		c.XPubMagicSegwitNative = xpubMagicSegwitNative
+	}
+	return c
+}
 
-    // Override XPub magic values specific to PepePow
-    cfg.XpubMagic = raw.XpubMagic
-    cfg.XpubMagicSegwitP2sh = raw.XpubMagicSegwitP2sh
-    cfg.XpubMagicSegwitNative = raw.XpubMagicSegwitNative
+// NewPepepowParser returns a new parser instance configured for PepePow.
+func NewPepepowParser(params *chaincfg.Params, c *btc.Configuration) *PepepowParser {
+	cfg := applyPepepowConfig(c)
+	return &PepepowParser{
+		BitcoinLikeParser: btc.NewBitcoinLikeParser(params, cfg),
+		baseparser:        &bchain.BaseParser{},
+	}
+}
 
-    return cfg,
+// GetChainParams proxies to the Dash chain parameters as PepePow inherits them.
+func GetChainParams(chain string) *chaincfg.Params {
+	return dash.GetChainParams(chain)
+}
+
+// PackTx packs transaction to byte array using protobuf.
+func (p *PepepowParser) PackTx(tx *bchain.Tx, height uint32, blockTime int64) ([]byte, error) {
+	return p.baseparser.PackTx(tx, height, blockTime)
+}
+
+// UnpackTx unpacks transaction from protobuf byte array.
+func (p *PepepowParser) UnpackTx(buf []byte) (*bchain.Tx, uint32, error) {
+	return p.baseparser.UnpackTx(buf)
+}
