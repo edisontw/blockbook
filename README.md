@@ -37,7 +37,7 @@ Testnets for some coins are also supported, for example:
 
 -   Bitcoin Testnet, Bitcoin Cash Testnet, ZCash Testnet, Ethereum Testnets (Sepolia, Holesky)
 
-List of all implemented coins is in [the registry of ports](/docs/ports.md).
+List of all implemented coins is in [the registry of ports](/docs/ports.md). For details on running the new PepePow integration end to end, see [docs/pepepow.md](/docs/pepepow.md).
 
 ## Common issues when running Blockbook or implementing additional coins
 
